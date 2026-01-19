@@ -69,12 +69,6 @@ export function ITESection() {
             <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
           </div>
           
-          {/* Floating Price Badge */}
-          <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-burgundy text-white px-8 py-5 rounded-2xl shadow-2xl shadow-burgundy/40 animate-float">
-            <p className="text-white/80 text-sm font-medium mb-1">À partir de</p>
-            <p className="text-3xl font-bold">105€<span className="text-lg font-normal">/m²</span></p>
-          </div>
-          
           {/* Process indicator */}
           <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 flex gap-2">
             <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg">
