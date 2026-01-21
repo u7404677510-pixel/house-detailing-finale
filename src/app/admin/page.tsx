@@ -26,7 +26,7 @@ import { collection, getDocs, query, orderBy, updateDoc, doc, Timestamp } from "
 
 // ⚠️ Change these credentials in production!
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "HouseDetailing2024!";
+const ADMIN_PASSWORD = "momaxadmin123";
 
 interface LeadDevis {
   id: string;
