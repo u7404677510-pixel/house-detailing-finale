@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { StickyButtons } from "@/components/layout/StickyButtons";
 
 export const metadata: Metadata = {
   title: "House Detailing by MSB | Rénovation de Façade Premium en Île-de-France",
@@ -18,12 +15,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <StickyButtons />
+        {children}
       </body>
     </html>
   );

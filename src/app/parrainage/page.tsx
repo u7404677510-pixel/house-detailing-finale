@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Gift, User, MapPin, Phone, Mail, CheckCircle2, ArrowRight, Info, Sparkles } from "lucide-react";
+import { Users, Gift, User, MapPin, Phone, Mail, CheckCircle2, ArrowRight, Info, Sparkles, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 interface FormData {
   // Parrain (Referrer) info
@@ -24,6 +27,14 @@ interface FormErrors {
 }
 
 export default function ParrainagePage() {
+  return (
+    <MainLayout>
+      <ParrainageContent />
+    </MainLayout>
+  );
+}
+
+function ParrainageContent() {
   const [formData, setFormData] = useState<FormData>({
     parrainNom: "",
     parrainPrenom: "",
@@ -36,6 +47,7 @@ export default function ParrainagePage() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -85,12 +97,36 @@ export default function ParrainagePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      console.log("📋 Parrainage soumis:", formData);
-      setIsSubmitted(true);
+      setIsLoading(true);
+      try {
+        // Save to Firestore
+        await addDoc(collection(db, "leads_parrainage"), {
+          // Parrain info
+          parrainNom: formData.parrainNom,
+          parrainPrenom: formData.parrainPrenom,
+          parrainEmail: formData.parrainEmail,
+          parrainTel: formData.parrainTel,
+          // Filleul info
+          filleulNom: formData.filleulNom,
+          filleulAdresse: formData.filleulAdresse,
+          filleulTel: formData.filleulTel,
+          // Metadata
+          status: "nouveau",
+          createdAt: serverTimestamp(),
+        });
+        
+        console.log("✅ Lead parrainage sauvegardé dans Firebase");
+        setIsSubmitted(true);
+      } catch (error) {
+        console.error("❌ Erreur Firebase:", error);
+        alert("Une erreur est survenue. Veuillez réessayer.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -373,10 +409,20 @@ export default function ParrainagePage() {
                   <Button 
                     type="submit" 
                     size="lg"
+                    disabled={isLoading}
                     className="w-full bg-burgundy hover:bg-burgundy-light text-white font-semibold h-14 text-lg shadow-lg shadow-burgundy/25"
                   >
-                    Envoyer ma recommandation
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Envoi en cours...
+                      </>
+                    ) : (
+                      <>
+                        Envoyer ma recommandation
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    )}
                   </Button>
 
                   <p className="text-center text-sm text-muted-foreground">

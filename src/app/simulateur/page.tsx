@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Calculator, Droplets, Wrench, Paintbrush, ThermometerSun, Check, Info, ArrowRight } from "lucide-react";
+import { Calculator, Droplets, Wrench, Paintbrush, ThermometerSun, Check, Info, ArrowRight, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 // Pricing configuration - Business rules
 const FORMULAS = [
@@ -57,8 +60,17 @@ const FORMULAS = [
 ];
 
 export default function SimulateurPage() {
+  return (
+    <MainLayout>
+      <SimulateurContent />
+    </MainLayout>
+  );
+}
+
+function SimulateurContent() {
   const [surface, setSurface] = useState<number>(100);
   const [selectedFormula, setSelectedFormula] = useState<string>("ravalement");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Calculate estimated price
   const estimatedPrice = useMemo(() => {
@@ -69,18 +81,30 @@ export default function SimulateurPage() {
 
   const selectedFormulaData = FORMULAS.find((f) => f.id === selectedFormula);
 
-  const handleValidation = () => {
+  const handleValidation = async () => {
     const formula = FORMULAS.find((f) => f.id === selectedFormula);
-    const devisData = {
-      surface: surface,
-      formule: formula?.name,
-      prixUnitaire: formula?.pricePerSqm,
-      prixTotal: estimatedPrice,
-      date: new Date().toISOString(),
-    };
     
-    console.log("📋 Devis validé:", devisData);
-    alert(`✅ Devis enregistré !\n\nFormule: ${formula?.name}\nSurface: ${surface} m²\nPrix estimé: ${estimatedPrice.toLocaleString('fr-FR')} €\n\nUn conseiller vous contactera très prochainement.`);
+    setIsLoading(true);
+    try {
+      // Save to Firestore
+      await addDoc(collection(db, "leads_devis"), {
+        surface: surface,
+        formuleId: formula?.id,
+        formuleName: formula?.name,
+        prixUnitaire: formula?.pricePerSqm,
+        prixTotal: estimatedPrice,
+        status: "nouveau",
+        createdAt: serverTimestamp(),
+      });
+      
+      console.log("✅ Lead devis sauvegardé dans Firebase");
+      alert(`✅ Devis enregistré !\n\nFormule: ${formula?.name}\nSurface: ${surface} m²\nPrix estimé: ${estimatedPrice.toLocaleString('fr-FR')} €\n\nUn conseiller vous contactera très prochainement.`);
+    } catch (error) {
+      console.error("❌ Erreur Firebase:", error);
+      alert("Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -291,10 +315,19 @@ export default function SimulateurPage() {
                       <Button 
                         onClick={handleValidation}
                         className="w-full bg-burgundy hover:bg-burgundy-light text-white font-semibold h-12 text-base"
-                        disabled={!surface || surface <= 0}
+                        disabled={!surface || surface <= 0 || isLoading}
                       >
-                        Valider ce devis
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Envoi en cours...
+                          </>
+                        ) : (
+                          <>
+                            Valider ce devis
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                          </>
+                        )}
                       </Button>
 
                       <p className="text-xs text-center text-muted-foreground mt-4">
